@@ -1,6 +1,6 @@
-# Docker image for igpublisher
+# Docker image for ig-publisher
 
-Builds docker image for igpublisher
+Builds docker image for ig-publisher
 
 ## Use locally
 
@@ -10,8 +10,8 @@ Building the container
 docker build . -t igpublisher:localbuild
 ```
 
-Running on local implementation guild:
+Running on local implementation build:
+
 ```bash
-cd common-implementationguide
-docker run -v ${PWD}/:/app/ igpublisher:localbuild  /app/ig.json
+docker run -v ${PWD}/:/app/ igpublisher:localbuild -ig /app/ig.json
 ```
