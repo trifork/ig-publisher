@@ -1,0 +1,45 @@
+name: FUT Infrastructure IG Publisher image build
+
+on:
+  workflow_dispatch: # Enable manual run on main
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  REGISTRY: ghcr.io
+  CONTENT_PATH: ./
+  IMAGE_NAME: ${{ github.repository }}
+  CONTAINER_DESCRIPTION: "Non-root FHIR ig-publisher container"
+
+jobs:
+  container:
+    name: Container build & push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=edge
+            type=raw,${{ github.ref }}
+          labels: |
+            org.opencontainers.image.title=${{ env.IMAGE_NAME }}
+            org.opencontainers.image.description=${{ env.CONTAINER_DESCRIPTION }}
+
+      - name: build
+        uses: aevea/kaniko@v0.13.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          image: ${{ env.IMAGE_NAME }}
+          tag: ${{ steps.meta.outputs.tags }}
