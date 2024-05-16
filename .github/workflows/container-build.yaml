@@ -13,13 +13,12 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-  CONTAINER_DESCRIPTION: "Non-root FHIR ig-publisher container"
   DATE_TAG: "$(date +'%Y-%m-%d')"
 
 jobs:
   container:
     name: Container build & push
+    permissions: write-all
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
