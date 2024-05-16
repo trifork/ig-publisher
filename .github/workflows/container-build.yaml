@@ -36,7 +36,7 @@ jobs:
             org.opencontainers.image.description=${{ env.CONTAINER_DESCRIPTION }}
 
       - name: build
-        uses: aevea/kaniko@v0.13.0
+        uses: aevea/action-kaniko@v0.13.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.repository_owner }}
