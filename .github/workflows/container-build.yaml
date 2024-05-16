@@ -28,7 +28,6 @@ jobs:
         uses: aevea/action-kaniko@v0.13.0
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
           image: ig-publisher
           tag_with_latest: true
