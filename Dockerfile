@@ -4,7 +4,7 @@ LABEL maintainer="Henning C. Nielsen"
 # https://github.com/codacy/codacy-hadolint/blob/master/codacy-hadolint/docs/description/DL4006.md
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-ARG user=publisher,
+ARG user=publisher
 ARG group=publisher
 ARG uid=1000
 ARG gid=1000
