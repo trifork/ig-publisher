@@ -1,6 +1,9 @@
 FROM openjdk:23-jdk-slim-bookworm
 LABEL maintainer="Henning C. Nielsen"
 
+LABEL org.opencontainers.image.description="FHIR Implementation Guide Publisher"
+LABEL org.opencontainers.image.vendor="FUT Infrastructure"
+
 # https://github.com/codacy/codacy-hadolint/blob/master/codacy-hadolint/docs/description/DL4006.md
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
