@@ -19,6 +19,7 @@ RUN  apt-get update \
        curl=7.88.1-10+deb12u5 \
        ruby=1:3.1 \
        ruby-dev=1:3.1 \
+       libfreetype6=2.12.1+dfsg-5 \
   \
   && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
   && apt-get install --yes --no-install-recommends nodejs=20.13.1-1nodesource1 \
@@ -39,7 +40,9 @@ RUN  apt-get update \
   && rm -rf /var/lib/apt/lists/* \
   \
   && groupadd -g ${gid} ${group} \
-  && useradd -l -u ${uid} -g ${group} -m ${user}
+  && useradd -l -u ${uid} -g ${group} -m ${user} \
+  && mkdir -p /home/${user}/fhir-package-cache \
+  && chown ${uid}:127 /home/${user}/fhir-package-cache
 
 # Do not run the entrypoint as root. That is a security risk.
 USER ${uid}:${gid}
