@@ -2,14 +2,12 @@ name: FUT Infrastructure IG Publisher image build
 
 on:
   workflow_dispatch: # Enable manual run on main
-    branches:
-      - main
-  push:
-    branches:
-      - main
+    branches: [ main ]
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
+  push:
+    tags:
+      - v*
 
 env:
   REGISTRY: ghcr.io
@@ -30,5 +28,5 @@ jobs:
           registry: ${{ env.REGISTRY }}
           password: ${{ secrets.GITHUB_TOKEN }}
           image: ig-publisher
-          tag_with_latest: true
-          tag: ${{ env.DATE_TAG }}
+          tag_with_latest: ${{ github.ref_type == 'tag' && 'true' || 'false' }}
+          tag: ${{ github.ref_type == 'tag' && github.ref_name || env.DATE_TAG }}
