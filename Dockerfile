@@ -8,9 +8,9 @@ LABEL org.opencontainers.image.vendor="FUT Infrastructure"
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ARG user=publisher
-ARG group=publisher
-ARG uid=1000
-ARG gid=1000
+# ARG group=publisher
+# ARG uid=1000
+# ARG gid=1000
 
 ARG IG_PUB_VERSION=1.6.10
 
@@ -41,13 +41,14 @@ RUN  apt-get update \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
   \
-  && groupadd -g ${gid} ${group} \
-  && useradd -l -u ${uid} -g ${group} -m ${user} \
-  && mkdir -p /home/${user}/fhir-package-cache \
-  && chown ${uid} /home/${user}/fhir-package-cache
+  # && groupadd -g ${gid} ${group} \
+  # && useradd -l -u ${uid} -g ${group} -m ${user} \
+  && mkdir -p /home/${user}/fhir-package-cache
+  # && chown ${uid} /home/${user}/fhir-package-cache
 
 # Do not run the entrypoint as root. That is a security risk.
-USER ${uid}:${gid}
+# .. but unfortunately GitHub workflows do not support running as non-root
+# USER ${uid}:${gid}
 WORKDIR /home/${user}
 
 ENTRYPOINT [ "java", "-Xmx4g", "-jar", "/input-cache/publisher.jar"]
