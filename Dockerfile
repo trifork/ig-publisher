@@ -12,28 +12,30 @@ ARG group=publisher
 ARG uid=1000
 ARG gid=1000
 
+ARG IG_PUB_VERSION=1.6.10
+
 # https://github.com/nodesource/distributions?tab=readme-ov-file#debian-versions
-# hadolint ignore=DL3008
+# hadolint ignore=DL3008,DL3028,DL3016
 RUN  apt-get update \
   && apt-get install --yes --no-install-recommends \
-       build-essential=12.9 \
-       curl=7.88.1-10+deb12u5 \
-       ruby=1:3.1 \
-       ruby-dev=1:3.1 \
-       libfreetype6=2.12.1+dfsg-5 \
+       build-essential \
+       git \
+       curl \
+       ruby \
+       ruby-dev \
+       libfreetype6 \
   \
   && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
   && apt-get install --yes --no-install-recommends nodejs \
   \
   && gem install \
-       bundler:2.5.11 \
-       jekyll:4.3.3 \
+       bundler \
+       jekyll \
   \
-  && npm install -g npm@10.8.0 \
-  && npm install -g fsh-sushi@3.10.0 \
+  && npm install -g fsh-sushi \
   \
   && mkdir input-cache \
-  && curl -fsSL https://github.com/HL7/fhir-ig-publisher/releases/download/1.6.10/publisher.jar -o input-cache/publisher.jar \
+  && curl -fsSL https://github.com/HL7/fhir-ig-publisher/releases/download/${IG_PUB_VERSION}/publisher.jar -o input-cache/publisher.jar \
   \
   && apt-get autoremove --yes curl \
   && apt-get clean \
@@ -42,7 +44,7 @@ RUN  apt-get update \
   && groupadd -g ${gid} ${group} \
   && useradd -l -u ${uid} -g ${group} -m ${user} \
   && mkdir -p /home/${user}/fhir-package-cache \
-  && chown ${uid}:127 /home/${user}/fhir-package-cache
+  && chown ${uid} /home/${user}/fhir-package-cache
 
 # Do not run the entrypoint as root. That is a security risk.
 USER ${uid}:${gid}

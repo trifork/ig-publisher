@@ -6,8 +6,7 @@ on:
   pull_request:
     branches: [ main ]
   push:
-    tags:
-      - v*
+    tags: ['*']
 
 env:
   REGISTRY: ghcr.io
@@ -30,3 +29,4 @@ jobs:
           image: ig-publisher
           tag_with_latest: ${{ github.ref_type == 'tag' && 'true' || 'false' }}
           tag: ${{ github.ref_type == 'tag' && github.ref_name || env.DATE_TAG }}
+          extra_args: ${{ github.ref_type == 'tag' && format('--build-arg IG_PUB_VERSION={0}', github.ref_name) || '' }}
