@@ -19,6 +19,7 @@ ARG IG_PUB_VERSION=1.6.10
 RUN  apt-get update \
   && apt-get install --yes --no-install-recommends \
        build-essential \
+       jq \
        git \
        curl \
        ruby \
