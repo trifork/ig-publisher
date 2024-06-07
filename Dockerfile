@@ -16,7 +16,8 @@ ARG IG_PUB_VERSION=1.6.10
 
 # https://github.com/nodesource/distributions?tab=readme-ov-file#debian-versions
 # hadolint ignore=DL3008,DL3028,DL3016
-RUN  apt-get update \
+RUN  sed -i 's/^Components: main$/& contrib/' /etc/apt/sources.list.d/debian.sources \
+  && apt-get update \
   && apt-get install --yes --no-install-recommends \
        build-essential \
        jq \
@@ -25,6 +26,10 @@ RUN  apt-get update \
        ruby \
        ruby-dev \
        libfreetype6 \
+       # Fixes Spring Boot FontConfiguration exceptions - https://coderanch.com/t/761996/frameworks/Docker-Spring-boot-giving-sun
+       ttf-mscorefonts-installer \
+       fontconfig \
+  && fc-cache -f -v \
   \
   && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
   && apt-get install --yes --no-install-recommends nodejs \
