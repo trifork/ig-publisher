@@ -12,7 +12,7 @@ ARG user=publisher
 # ARG uid=1000
 # ARG gid=1000
 
-ARG IG_PUB_VERSION=1.6.11
+ARG IG_PUB_VERSION # Is set by the pipeline
 
 # https://github.com/nodesource/distributions?tab=readme-ov-file#debian-versions
 # hadolint ignore=DL3008,DL3028,DL3016
@@ -21,6 +21,7 @@ RUN  sed -i 's/^Components: main$/& contrib/' /etc/apt/sources.list.d/debian.sou
   && apt-get install --yes --no-install-recommends \
        build-essential \
        jq \
+       yq \
        git \
        curl \
        ruby \
