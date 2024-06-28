@@ -1,0 +1,28 @@
+name: Detect new upstream release
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 7 * * 1-5"
+
+jobs:
+  trigger-from-upstream:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get the latest upstream release
+        id: upstream
+        run: |
+          echo "upstream_version=$(curl -s https://api.github.com/repos/HL7/fhir-ig-publisher/releases/latest | jq -r '.tag_name')" >> $GITHUB_OUTPUT
+
+      - name: Get the latest FUT release
+        id: fut
+        run: |
+          echo "fut_version=$(git tag --sort=comitterdate | grep -E '[0-9]' | tail -1)" >> $GITHUB_OUTPUT
+
+      - name: Create tag for the new upstream release
+        if: steps.upstream.outputs.upstream_version != steps.fut.outputs.fut_version
+        run: |
+          git tag ${{ steps.upstream.outputs.upstream_version }}
+          git push origin ${{ steps.upstream.outputs.upstream_version }}
