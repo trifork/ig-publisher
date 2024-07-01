@@ -19,7 +19,7 @@ jobs:
       - name: Get the latest FUT release
         id: fut
         run: |
-          echo "fut_version=$(git tag --sort=comitterdate | grep -E '[0-9]' | tail -1)" >> $GITHUB_OUTPUT
+          echo "fut_version=$(git tag --sort=committerdate | grep -E '[0-9]' | tail -1 | sed 's/\\n/\n/g')" >> $GITHUB_OUTPUT
 
       - name: Create tag for the new upstream release
         if: steps.upstream.outputs.upstream_version != steps.fut.outputs.fut_version
