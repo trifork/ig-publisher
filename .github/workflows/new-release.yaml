@@ -10,6 +10,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+
+      - name: Pipeline debug
+        if: vars.DEBUG == 'true'
+        run: |
+          echo "Upstream output: ${{ steps.upstream.outputs.upstream_version }}"
+          echo "Files:"
+          ls -lav
+          echo "Git info:"
+          git status -bv
+          git branch -v
+          echo "Log:"
+          git log --oneline --decorate --graph
+          echo "Tags:"
+          git tag --sort=committerdate
+          echo "SemVer tags:"
+          git tag --sort=committerdate | grep -E '[0-9]'
 
       - name: Get the latest upstream release
         id: upstream
@@ -21,10 +39,6 @@ jobs:
       - name: Get the latest FUT release
         id: fut
         run: |
-          echo "Tags:"
-          git tag --sort=committerdate
-          echo "SemVer tags:"
-          git tag --sort=committerdate | grep -E '[0-9]'
           fut_version=$(git tag --sort=committerdate | grep -E '[0-9]' | tail -1 | sed 's/\\n/\n/g')
           echo "Latest SemVer tag: $(git tag --sort=committerdate | grep -E '[0-9]' | tail -1)"
           echo "fut_version=$fut_version" >> $GITHUB_OUTPUT
