@@ -14,13 +14,16 @@ jobs:
       - name: Get the latest upstream release
         id: upstream
         run: |
-          echo "upstream_version=$(curl -s https://api.github.com/repos/HL7/fhir-ig-publisher/releases/latest | jq -r '.tag_name')" >> $GITHUB_OUTPUT
+          upstream_version=$(curl -s https://api.github.com/repos/HL7/fhir-ig-publisher/releases/latest | jq -r '.tag_name')
+          echo "echo upstream_version=$upstream_version" >> $GITHUB_OUTPUT
           echo "Found upstream release: \"$upstream_version\""
 
       - name: Get the latest FUT release
         id: fut
         run: |
-          echo "fut_version=$(git tag --sort=committerdate | grep -E '[0-9]' | tail -1 | sed 's/\\n/\n/g')" >> $GITHUB_OUTPUT
+          fut_version=$(git tag --sort=committerdate | grep -E '[0-9]' | tail -1 | sed 's/\\n/\n/g')
+          echo "Latest SemVer tag: $(git tag --sort=committerdate | grep -E '[0-9]' | tail -1)"
+          echo "fut_version=$fut_version" >> $GITHUB_OUTPUT
           echo "Found FUT release: \"$fut_version\""
 
       - name: Create tag for the new upstream release
