@@ -122,8 +122,11 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64/v8
-          build-args: ${{ format('--build-arg IG_PUB_VERSION={0}', steps.fut.outputs.fut_version) }}
-          push: ${{ github.event_name != 'pull_request' }}
+          build-args: |
+            IG_PUB_VERSION=1.6.20
+          # build-args: ${{ format('--build-arg IG_PUB_VERSION={0}', steps.fut.outputs.fut_version) }}
+          push: true
+          # ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
