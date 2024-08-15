@@ -59,6 +59,8 @@ jobs:
 
       - name: Get the latest FUT release
         id: fut
+        env:
+          name: ${{ github.repository }}
         run: |
           # https://git-scm.com/docs/git-tag#Documentation/git-tag.txt---sortltkeygt
           # https://remarkablemark.org/blog/2023/04/15/how-to-grep-for-semver/
@@ -68,6 +70,7 @@ jobs:
             | sed 's/\\n//g') # Remove any newlines.
           echo "Latest SemVer tag: $fut_version"
           echo "fut_version=$fut_version" >> $GITHUB_OUTPUT
+          echo "imageOutput=${name,,}" >> ${GITHUB_OUTPUT}
           echo "Found FUT release: \"$fut_version\""
 
       # - name: Create tag for the new upstream release
@@ -91,7 +94,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ${{ steps.fut.outputs.imageOutput }}
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
       
@@ -101,7 +104,7 @@ jobs:
         with:
           # list of Docker images to use as base name for tags
           images: |
-            ${{ env.REGISTRY }}/ig-publisher
+            ${{ env.REGISTRY }}/${name,,}${{ github.repository }}ig-publisher
           # Docker tags based on the following events/attributes
           tags: |
             type=schedule
