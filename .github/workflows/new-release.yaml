@@ -119,20 +119,20 @@ jobs:
             type=raw,latest
             type=semver,pattern={{version}},value=${{ steps.fut.outputs.fut_version }}
 
-      # - name: Build and push
-      #   uses: docker/build-push-action@v6
-      #   if: >-
-      #     (steps.upstream.outputs.upstream_version != steps.fut.outputs.fut_version) ||
-      #     (github.event_name == 'workflow_dispatch' && github.event.inputs.force_build == 'true')
-      #   with:
-      #     context: .
-      #     platforms: linux/amd64,linux/arm64/v8
-      #     build-args: IG_PUB_VERSION=1.6.20
-      #     # build-args: ${{ format('--build-arg IG_PUB_VERSION={0}', steps.fut.outputs.fut_version) }}
-      #     push: true
-      #     # ${{ github.event_name != 'pull_request' }}
-      #     tags: ${{ steps.meta.outputs.tags }}
-      #     labels: ${{ steps.meta.outputs.labels }}
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        if: >-
+          (steps.upstream.outputs.upstream_version != steps.fut.outputs.fut_version) ||
+          (github.event_name == 'workflow_dispatch' && github.event.inputs.force_build == 'true')
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64/v8
+          build-args: IG_PUB_VERSION=1.6.20
+          # build-args: ${{ format('--build-arg IG_PUB_VERSION={0}', steps.fut.outputs.fut_version) }}
+          push: true
+          # ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
 
       # - name: build
       #   if: >-
