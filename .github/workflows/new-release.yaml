@@ -68,8 +68,8 @@ jobs:
             | grep -Eo '[0-9]{1,}.[0-9]{1,}.[0-9]{1,}' \
             | tail -1 \
             | sed 's/\\n//g') # Remove any newlines.
-          echo "imageOutput=${name,,}" >> ${GITHUB_OUTPUT}
-          echo "Set publish directory to: \"$imageOutput\""
+          echo "image_output=${name,,}" >> $GITHUB_OUTPUT
+          echo "Set publish directory to: \"$env.REGISTRY\"/\"$image_output\""
           echo "Latest SemVer tag: $fut_version"
           echo "fut_version=$fut_version" >> $GITHUB_OUTPUT
           echo "Found FUT release: \"$fut_version\""
@@ -105,7 +105,7 @@ jobs:
         with:
           # list of Docker images to use as base name for tags
           images: |
-            ${{ env.REGISTRY }}/${{ steps.fut.outputs.imageOutput }}
+            ${{ env.REGISTRY }}/${{ steps.fut.outputs.image_output }}
           # Docker tags based on the following events/attributes
           tags: |
             type=schedule
