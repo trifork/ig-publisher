@@ -22,6 +22,7 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   trigger-from-upstream:
@@ -60,7 +61,7 @@ jobs:
       - name: Get the latest FUT release
         id: fut
         env:
-          name: ${{ github.repository }}
+          name: ${{ env.IMAGE_NAME }}
         run: |
           # https://git-scm.com/docs/git-tag#Documentation/git-tag.txt---sortltkeygt
           # https://remarkablemark.org/blog/2023/04/15/how-to-grep-for-semver/
