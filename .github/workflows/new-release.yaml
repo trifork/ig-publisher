@@ -75,8 +75,8 @@ jobs:
         run: |
           echo "Upstream output: ${{ steps.upstream.outputs.upstream_version }}"
           echo "FUT output: ${{ steps.fut.outputs.fut_version }}"
-          git tag ${{ steps.upstream.outputs.upstream_version }}
-          git push origin ${{ steps.upstream.outputs.upstream_version }}
+          git tag ${{ steps.fut.outputs.fut_version }}
+          git push origin ${{ steps.fut.outputs.fut_version }}
 
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
