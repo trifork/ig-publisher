@@ -121,7 +121,7 @@ jobs:
           (github.event_name == 'workflow_dispatch' && github.event.inputs.force_build == 'true')
         with:
           context: .
-          platforms: linux/amd64,linux/arm/v8
+          platforms: linux/amd64,linux/arm64/v8
           build-args: ${{ format('--build-arg IG_PUB_VERSION={0}', steps.fut.outputs.fut_version) }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
