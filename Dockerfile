@@ -41,8 +41,8 @@ RUN sed -i 's/^Components: main$/& contrib/' /etc/apt/sources.list.d/debian.sour
   && npm install -g fsh-sushi \
   \
   && mkdir input-cache \
-  \
   && curl -fsSL https://github.com/HL7/fhir-ig-publisher/releases/download/${IG_PUB_VERSION}/publisher.jar -o input-cache/publisher.jar \
+  \
   && apt-get autoremove --yes curl \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
