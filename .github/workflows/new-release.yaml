@@ -34,8 +34,9 @@ jobs:
           fetch-depth: 0
           # fetch-tags: true # Does not work for some reason, so we we use fetch-depth: 0
 
+        # https://github.com/fut-infrastructure/ig-publisher/settings/variables/actions
       - name: Pipeline debug
-        if: vars.DEBUG == 'true' # https://github.com/fut-infrastructure/ig-publisher/settings/variables/actions
+        if: vars.DEBUG == 'true' 
         run: |
           echo "Files:"
           ls -lav
@@ -74,13 +75,13 @@ jobs:
           echo "fut_version=$fut_version" >> $GITHUB_OUTPUT
           echo "Found FUT release: \"$fut_version\""
 
-      # - name: Create tag for the new upstream release
-      #   if: steps.upstream.outputs.upstream_version != steps.fut.outputs.fut_version
-      #   run: |
-      #     echo "Upstream output: ${{ steps.upstream.outputs.upstream_version }}"
-      #     echo "FUT output: ${{ steps.fut.outputs.fut_version }}"
-      #     git tag ${{ steps.upstream.outputs.upstream_version }}
-      #     git push origin ${{ steps.upstream.outputs.upstream_version }}
+      - name: Create tag for the new upstream release
+        if: steps.upstream.outputs.upstream_version != steps.fut.outputs.fut_version
+        run: |
+          echo "Upstream output: ${{ steps.upstream.outputs.upstream_version }}"
+          echo "FUT output: ${{ steps.fut.outputs.fut_version }}"
+          git tag ${{ steps.upstream.outputs.upstream_version }}
+          git push origin ${{ steps.upstream.outputs.upstream_version }}
 
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
@@ -127,24 +128,9 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64/v8
-          build-args: IG_PUB_VERSION=1.6.20
-          # build-args: ${{ format('--build-arg IG_PUB_VERSION={0}', steps.fut.outputs.fut_version) }}
-          push: true
-          # ${{ github.event_name != 'pull_request' }}
+          build-args: ${{ steps.fut.outputs.fut_version }}
+          push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha, scope=${{ github.workflow }}
           cache-to: type=gha, scope=${{ github.workflow }}
-
-      # - name: build
-      #   if: >-
-      #     (steps.upstream.outputs.upstream_version != steps.fut.outputs.fut_version) ||
-      #     (github.event_name == 'workflow_dispatch' && github.event.inputs.force_build == 'true')
-      #   uses: aevea/action-kaniko@v0.13.0
-      #   with:
-      #     registry: ${{ env.REGISTRY }}
-      #     password: ${{ secrets.GITHUB_TOKEN }}
-      #     image: ig-publisher
-      #     tag_with_latest: true
-      #     tag: ${{ steps.fut.outputs.fut_version }}
-      #     extra_args: ${{ format('--build-arg IG_PUB_VERSION={0}', steps.fut.outputs.fut_version) }}
