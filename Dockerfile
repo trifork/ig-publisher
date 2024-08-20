@@ -30,7 +30,6 @@ RUN sed -i 's/^Components: main$/& contrib/' /etc/apt/sources.list.d/debian.sour
        # Fixes Spring Boot FontConfiguration exceptions - https://coderanch.com/t/761996/frameworks/Docker-Spring-boot-giving-sun
        ttf-mscorefonts-installer \
        fontconfig \
-  \
   && fc-cache -f -v \
   && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
   && apt-get install --yes --no-install-recommends nodejs \
@@ -44,7 +43,6 @@ RUN sed -i 's/^Components: main$/& contrib/' /etc/apt/sources.list.d/debian.sour
   && mkdir input-cache \
   \
   && curl -fsSL https://github.com/HL7/fhir-ig-publisher/releases/download/${IG_PUB_VERSION}/publisher.jar -o input-cache/publisher.jar \
-  \
   && apt-get autoremove --yes curl \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
