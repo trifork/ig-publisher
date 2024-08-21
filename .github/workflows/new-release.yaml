@@ -129,7 +129,7 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64/v8
-          build-args: ${{ steps.fut.outputs.fut_version }}
+          build-args: IG_PUB_VERSION=${{ steps.fut.outputs.fut_version }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
