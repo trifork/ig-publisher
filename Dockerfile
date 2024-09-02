@@ -4,9 +4,6 @@ LABEL maintainer="Henning C. Nielsen"
 LABEL org.opencontainers.image.description="FHIR Implementation Guide Publisher"
 LABEL org.opencontainers.image.vendor="FUT Infrastructure"
 
-# https://github.com/codacy/codacy-hadolint/blob/master/codacy-hadolint/docs/description/DL4006.md
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
 ARG user=publisher
 # ARG group=publisher
 # ARG uid=1000
@@ -14,9 +11,12 @@ ARG user=publisher
 
 ARG IG_PUB_VERSION # Is set by the pipeline
 
+# https://github.com/codacy/codacy-hadolint/blob/master/docs/description/DL4006.md
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # https://github.com/nodesource/distributions?tab=readme-ov-file#debian-versions
 # hadolint ignore=DL3008,DL3028,DL3016
-RUN  sed -i 's/^Components: main$/& contrib/' /etc/apt/sources.list.d/debian.sources \
+RUN sed -i 's/^Components: main$/& contrib/' /etc/apt/sources.list.d/debian.sources \
   && apt-get update \
   && apt-get install --yes --no-install-recommends \
        build-essential \
@@ -31,7 +31,6 @@ RUN  sed -i 's/^Components: main$/& contrib/' /etc/apt/sources.list.d/debian.sou
        ttf-mscorefonts-installer \
        fontconfig \
   && fc-cache -f -v \
-  \
   && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
   && apt-get install --yes --no-install-recommends nodejs \
   \
