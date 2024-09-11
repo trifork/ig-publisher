@@ -51,6 +51,8 @@ jobs:
           git tag --sort=committerdate
           echo "SemVer tags:"
           git tag --sort=committerdate | grep -Eo '[0-9]{1,}.[0-9]{1,}.[0-9]{1,}' 
+          echo "Environment variables:"
+          env
 
       - name: Get the latest upstream release
         id: upstream
