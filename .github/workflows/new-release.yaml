@@ -126,7 +126,7 @@ jobs:
             type=semver,pattern={{major}}
             type=sha
             type=raw,latest
-            type=semver,pattern={{version}},value=${{ steps.fut.outputs.fut_version }}
+            type=semver,pattern={{version}},value=${{ steps.upstream.outputs.upstream_version }}
 
       - name: Build and push
         if: env.NEW_BUILD == 'true'
