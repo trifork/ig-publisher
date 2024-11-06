@@ -79,14 +79,12 @@ jobs:
           echo "fut_version=$fut_version" >> $GITHUB_OUTPUT
           echo "Found FUT release: \"$fut_version\""
 
-      - name: Create tag for the new upstream release
+      - name: Determine if new build is needed
         if: steps.upstream.outputs.upstream_version != steps.fut.outputs.fut_version
         run: |
           echo "Upstream output: ${{ steps.upstream.outputs.upstream_version }}"
           echo "FUT output: ${{ steps.fut.outputs.fut_version }}"
           echo "NEW_BUILD=true" >> $GITHUB_ENV
-          git tag ${{ steps.upstream.outputs.upstream_version }}
-          git push origin ${{ steps.upstream.outputs.upstream_version }}
 
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
@@ -135,10 +133,19 @@ jobs:
         with:
           context: .
           platforms: linux/amd64 #,linux/arm64
-          build-args: IG_PUB_VERSION=${{ steps.fut.outputs.fut_version }}
+          build-args: IG_PUB_VERSION=${{ steps.upstream.outputs.upstream_version }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
           cache-from: type=gha, scope=${{ github.workflow }}
           cache-to: type=gha, scope=${{ github.workflow }}
+
+      # The tag is created after the build in case the build fails, which
+      # would then prevent the tag from being created.
+      # and the failed build would be retried at each schedule.
+      - name: Create tag for the new upstream release
+        if: steps.upstream.outputs.upstream_version != steps.fut.outputs.fut_version
+        run: |
+          git tag ${{ steps.upstream.outputs.upstream_version }}
+          git push origin ${{ steps.upstream.outputs.upstream_version }}
