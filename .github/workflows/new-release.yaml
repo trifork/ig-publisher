@@ -13,11 +13,11 @@ on:
     tags: ["*"]
 
   schedule:
-      # https://crontab.guru/#0_7_*_*_1-5
+    # https://crontab.guru/#0_7_*_*_1-5
     - cron: "0 7 * * 1-5"
 
 # permissions are needed if pushing to ghcr.io
-permissions: 
+permissions:
   packages: write
   contents: write
 
@@ -30,15 +30,15 @@ jobs:
   trigger-from-upstream:
     runs-on: ubuntu-latest
     steps:
-        # https://github.com/actions/checkout/?tab=readme-ov-file#usage
+      # https://github.com/actions/checkout/?tab=readme-ov-file#usage
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           # fetch-tags: true # Does not work for some reason, so we we use fetch-depth: 0
 
-        # https://github.com/fut-infrastructure/ig-publisher/settings/variables/actions
+      # https://github.com/fut-infrastructure/ig-publisher/settings/variables/actions
       - name: Pipeline debug
-        if: vars.DEBUG == 'true' 
+        if: vars.DEBUG == 'true'
         run: |
           echo "Files:"
           ls -lav
@@ -108,7 +108,7 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Docker meta
         if: env.NEW_BUILD == 'true'
         id: meta # you'll use this in the next step
