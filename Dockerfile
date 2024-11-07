@@ -31,7 +31,7 @@ RUN sed -i 's/^Components: main$/& contrib/' /etc/apt/sources.list.d/debian.sour
        ttf-mscorefonts-installer \
        fontconfig \
   && fc-cache -f -v \
-  && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+  && curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
   && apt-get install --yes --no-install-recommends nodejs \
   \
   && gem install \
