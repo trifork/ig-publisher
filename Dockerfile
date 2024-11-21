@@ -2,7 +2,7 @@ FROM openjdk:23-jdk-slim-bookworm
 LABEL maintainer="Henning C. Nielsen"
 
 LABEL org.opencontainers.image.description="FHIR Implementation Guide Publisher"
-LABEL org.opencontainers.image.vendor="FUT Infrastructure"
+LABEL org.opencontainers.image.vendor="Trifork"
 
 ARG user=publisher
 # ARG group=publisher
