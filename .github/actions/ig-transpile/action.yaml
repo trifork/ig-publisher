@@ -1,0 +1,31 @@
+# This is a composite action that runs the publisher with -ig on the current
+# repo files or the specified implemetation guide source path.
+
+# This requires that a container with the ig-publisher is configured in
+# the jobs.<job_id>.container.image field in the workflow file.
+
+name: FHIR Implementation Guide Transpiler
+description: Transpile FHIR Implementation Guide to HTML
+inputs:
+  ig-source:
+    description: 'The path to the input IG files'
+    required: false
+    default: '.'
+
+  image-tag:
+    description: 'The tag of the ig-publisher image to use'
+    required: false
+    default: 'latest'
+
+  command:
+    description: 'The command to run the IG publisher'
+    required: false
+    default: 'java -jar /input-cache/publisher.jar'
+
+runs:
+  using: 'composite'
+
+  steps:
+    - name: Run the IG publisher
+      run: ${{ inputs.command }} -ig ${{ inputs.ig-source }}
+      shell: bash
