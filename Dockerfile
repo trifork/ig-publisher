@@ -5,9 +5,11 @@ LABEL org.opencontainers.image.description="FHIR Implementation Guide Publisher"
 LABEL org.opencontainers.image.vendor="Trifork"
 
 ARG user=publisher
-# ARG group=publisher
-# ARG uid=1000
-# ARG gid=1000
+ARG group=publisher
+ARG uid=1000
+ARG gid=1000
+# GitHub workflows hardcodes the HOME dir to /github/home
+ARG HOME=/github/home
 
 ARG IG_PUB_VERSION # Is set by the pipeline
 
@@ -47,14 +49,14 @@ RUN sed -i 's/^Components: main$/& contrib/' /etc/apt/sources.list.d/debian.sour
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
   \
-  # && groupadd -g ${gid} ${group} \
-  # && useradd -l -u ${uid} -g ${group} -m ${user} \
-  && mkdir -p /home/${user}/fhir-package-cache
-  # && chown ${uid} /home/${user}/fhir-package-cache
+  && groupadd -g ${gid} ${group} \
+  && useradd -l -u ${uid} -g ${group} -m ${user} -d $HOME \
+  && mkdir -p $HOME/fhir-package-cache \
+  && chown -R ${uid} $HOME
 
 # Do not run the entrypoint as root. That is a security risk.
 # .. but unfortunately GitHub workflows do not support running as non-root
 # USER ${uid}:${gid}
-WORKDIR /home/${user}
+WORKDIR $HOME
 
-ENTRYPOINT [ "java", "-Xmx4g", "-jar", "/input-cache/publisher.jar"]
+ENTRYPOINT [ "java", "-jar", "/input-cache/publisher.jar"]
