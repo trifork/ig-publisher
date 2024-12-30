@@ -12,11 +12,6 @@ inputs:
     required: false
     default: '.'
 
-  image-tag:
-    description: 'The tag of the ig-publisher image to use'
-    required: false
-    default: 'latest'
-
   command:
     description: 'The command to run the IG publisher'
     required: false

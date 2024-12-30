@@ -1,0 +1,170 @@
+# This is a composite action that runs the publisher with -go-publish on the
+# specified implemetation guide repositories.
+
+name: FHIR Implementation Guide Publish Process
+description: "Publish FHIR Implementation Guide to HTML and register in the FHIR IG registry"
+# description: |
+#   Publish FHIR Implementation Guide to web repo with the Publication process
+#
+#   This requires:
+#
+#   * A container with the ig-publisher is configured in
+#     the jobs.<job_id>.container.image field in the workflow file.
+#     E.g.: ghcr.io/trifork/ig-publisher:latest
+#   * The app token is for a GitHub App that has write access to the
+#     given implementation guide repositories.
+
+inputs:
+  app-token:
+    description: "The GitHub App token for creating commits to the given repos"
+    required: true
+
+  app-author-name:
+    description: "The author name for the commits. Example: fut-ig-publisher[bot]"
+    required: true
+
+  app-author-email:
+    description: "The author email for the commits. Example: fut-ig-publisher[bot]@users.noreply.github.com"
+    required: true
+
+  web-repo:
+    description: "The GitHub repository for the website of this IG"
+    required: true
+
+  registry-repo:
+    description: "The GitHub repository for the FHIR IG registry"
+    required: false
+    default: "FHIR/ig-registry"
+
+  history-repo:
+    description: "The GitHub repository for the FHIR IG registry"
+    required: false
+    default: "HL7/fhir-ig-history-template"
+
+  ig-source:
+    description: "The path to the input IG files"
+    required: false
+    default: "ig/"
+
+  web-source:
+    description: "The path to the website repo where the generated files should be committed"
+    required: false
+    default: "web/"
+
+  registry-source:
+    description: "The path to the registry repo where the new IG publication should be registered."
+    required: false
+    default: "registry"
+
+  history-source:
+    description: "The path to the history repo with the history template"
+    required: false
+    default: "history/"
+
+  web-template-source:
+    description: "The path to the web template repo where the template for the ig web is configured"
+    required: false
+    default: "web/templates"
+
+  registry-commit:
+    description: "Whether to commit the publication to the registry"
+    required: false
+    default: "true"
+
+  ig-country:
+    description: "The country code for the IG"
+    required: false
+    default: "dk"
+
+  command:
+    description: "The command to run the IG publisher"
+    required: false
+    default: "java -jar /input-cache/publisher.jar"
+
+runs:
+  using: composite
+
+  steps:
+    - name: web repo
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.web-repo }}
+        token: ${{ inputs.app-token }}
+        path: ${{ inputs.web-source }}
+
+    - name: registry repo
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.registry-repo }}
+        token: ${{ inputs.app-token }}
+        path: ${{ inputs.registry-source }}
+
+    - name: history repo
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.history-repo }}
+        token: ${{ inputs.app-token }}
+        path: ${{ inputs.history-source }}
+
+    - name: Run the IG publisher
+      uses: trifork/ig-publisher/.github/actions/ig-transpile@v1
+      with:
+        ig-source: ${{ inputs.ig-source }}
+        command: ${{ inputs.command }}
+
+    # https://confluence.hl7.org/display/FHIR/HL7+Process+for+Publishing+a+FHIR+IG
+    # https://confluence.hl7.org/pages/viewpage.action?pageId=81027536#MaintainingaFHIRIGPublication-CanonicalURLs
+    - name: Run the IG Publish process
+      shell: bash
+      run: >-
+        ${{ inputs.command }} -go-publish
+        -source ${{ inputs.ig-source }}
+        -web ${{ inputs.web-source }}
+        -registry ${{ inputs.registry-source }}/fhir-ig-list.json 
+        -history ${{ inputs.history-source }}
+        -templates ${{ inputs.web-template-source }}
+
+    - name: remove large unnecessary files
+      shell: bash
+      run: |
+        rm -rf "${{ inputs.web-source }}/ig-build-zips/*.zip"
+        rm -rf "${{ inputs.web-source }}/*/full-ig.zip"
+        rm -rf "${{ inputs.web-source }}/*/*/full-ig.zip"
+
+    - name: configure publication registry
+      shell: bash
+      run: |
+        export FUT_DESC=$(yq -r .description ig/sushi-config.yaml)
+        export FUT_AUTHORITY=$(yq -r .publisher.name ig/sushi-config.yaml)
+        echo $FUT_DESC
+        echo $FUT_AUTHORITY
+        echo "$(jq '
+          .guides[-1].description = env.FUT_DESC |
+          .guides[-1].authority = env.FUT_AUTHORITY |
+          .guides[-1].country = "${{ inputs.ig-country }}" |
+        ' ${{ inputs.registry-source }}/fhir-ig-list.json)" > ${{ inputs.registry-source }}/fhir-ig-list.json
+
+    - name: Show new IG publication regitstration
+      shell: bash
+      run: |
+        echo "$(jq '.guides[-1]' ${{ inputs.registry-source }}/fhir-ig-list.json)"
+
+    - name: commit web publication
+      uses: actions-js/push@v1.5
+      with:
+        github_token: ${{ inputs.app-token }}
+        author_name: ${{ inputs.app-author-name }}
+        author_email: ${{ inputs.app-author-email }}
+        repository: ${{ inputs.web-repo }}
+        directory: ${{ inputs.web-source }}
+
+    - name: commit publication to registry
+      uses: actions-js/push@v1.5
+      if: ${{ inputs.registry-commit == 'true' }}
+      with:
+        github_token: ${{ inputs.app-token }}
+        author_name: ${{ inputs.app-author-name }}
+        author_email: ${{ inputs.app-author-email }}
+        repository: ${{ inputs.registry-repo }}
+        branch: master
+        directory: ${{ inputs.registry-source }}

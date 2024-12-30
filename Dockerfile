@@ -56,6 +56,7 @@ RUN sed -i 's/^Components: main$/& contrib/' /etc/apt/sources.list.d/debian.sour
 
 # Do not run the entrypoint as root. That is a security risk.
 # .. but unfortunately GitHub workflows do not support running as non-root
+# https://github.com/actions/checkout/issues/1575
 # USER ${uid}:${gid}
 WORKDIR $HOME
 
