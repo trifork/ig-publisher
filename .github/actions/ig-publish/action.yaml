@@ -117,6 +117,14 @@ runs:
         ig-source: ${{ inputs.ig-source }}
         command: ${{ inputs.command }}
 
+    - name: Print publication config files
+      shell: bash
+      run: |
+        echo "======================== sushi-config.yaml        ========================"
+        cat ${{ inputs.ig-source }}/sushi-config.yaml
+        echo -n "\n\n======================== publication-request.json ========================\n"
+        cat ${{ inputs.ig-source }}/publication-request.json
+
     # https://confluence.hl7.org/display/FHIR/HL7+Process+for+Publishing+a+FHIR+IG
     # https://confluence.hl7.org/pages/viewpage.action?pageId=81027536#MaintainingaFHIRIGPublication-CanonicalURLs
     - name: Run the IG Publish process
@@ -129,18 +137,18 @@ runs:
         -history ${{ inputs.history-source }}
         -templates ${{ inputs.web-template-source }}
 
-    - name: remove large unnecessary files
+    - name: Remove large unnecessary files
       shell: bash
       run: |
         rm -rf "${{ inputs.web-source }}/ig-build-zips/*.zip"
         rm -rf "${{ inputs.web-source }}/*/full-ig.zip"
         rm -rf "${{ inputs.web-source }}/*/*/full-ig.zip"
 
-    - name: configure publication registry
+    - name: Configure publication registry
       shell: bash
       run: |
-        export FUT_DESC=$(yq -r .description ig/sushi-config.yaml)
-        export FUT_AUTHORITY=$(yq -r .publisher.name ig/sushi-config.yaml)
+        export FUT_DESC=$(yq -r .description ${{ inputs.ig-source }}/sushi-config.yaml)
+        export FUT_AUTHORITY=$(yq -r .publisher.name ${{ inputs.ig-source }}/sushi-config.yaml)
         echo $FUT_DESC
         echo $FUT_AUTHORITY
         echo "$(jq '
@@ -149,7 +157,7 @@ runs:
           .guides[-1].country = "${{ inputs.ig-country }}" |
         ' ${{ inputs.registry-source }}/fhir-ig-list.json)" > ${{ inputs.registry-source }}/fhir-ig-list.json
 
-    - name: Show new IG publication regitstration
+    - name: Show new publication IG publication registration entry
       shell: bash
       run: |
         echo "$(jq '.guides[-1]' ${{ inputs.registry-source }}/fhir-ig-list.json)"
