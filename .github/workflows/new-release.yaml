@@ -48,9 +48,9 @@ jobs:
           echo "Log:"
           git log --oneline --decorate --graph
           echo "Tags:"
-          git tag --sort=committerdate
+          git tag | sort --version-sort
           echo "SemVer tags:"
-          git tag --sort=committerdate | grep -Eo '[0-9]{1,}.[0-9]{1,}.[0-9]{1,}' 
+          git tag | sort --version-sort | grep -Eo '[0-9]{1,}.[0-9]{1,}.[0-9]{1,}' 
           echo "Environment variables:"
           env
 
@@ -70,7 +70,8 @@ jobs:
         run: |
           # https://git-scm.com/docs/git-tag#Documentation/git-tag.txt---sortltkeygt
           # https://remarkablemark.org/blog/2023/04/15/how-to-grep-for-semver/
-          fut_version=$(git tag --sort=committerdate \
+          fut_version=$(git tag \
+            | sort --version-sort \
             | grep -Eo '[0-9]{1,}.[0-9]{1,}.[0-9]{1,}' \
             | tail -1 \
             | sed 's/\\n//g') # Remove any newlines.
