@@ -2,17 +2,16 @@
 # specified implemetation guide repositories.
 
 name: FHIR Implementation Guide Publish Process
-description: "Publish FHIR Implementation Guide to HTML and register in the FHIR IG registry"
-# description: |
-#   Publish FHIR Implementation Guide to web repo with the Publication process
-#
-#   This requires:
-#
-#   * A container with the ig-publisher is configured in
-#     the jobs.<job_id>.container.image field in the workflow file.
-#     E.g.: ghcr.io/trifork/ig-publisher:latest
-#   * The app token is for a GitHub App that has write access to the
-#     given implementation guide repositories.
+description: |
+  Publish FHIR Implementation Guide to HTML and register in the FHIR IG registry
+
+  This requires:
+
+  * A container with the ig-publisher is configured in
+    the jobs.<job_id>.container.image field in the workflow file.
+    E.g.: ghcr.io/trifork/ig-publisher:latest
+  * The app token is for a GitHub App that has write access to the
+    given implementation guide repositories.
 
 inputs:
   app-token:
@@ -140,12 +139,9 @@ runs:
     - name: Remove large unnecessary files
       shell: bash
       run: |
-        rm -rf "${{ inputs.web-source }}/ig-build-zips/*.zip"
-        rm -rf "${{ inputs.web-source }}/*/full-ig.zip"
-        rm -rf "${{ inputs.web-source }}/*/*/full-ig.zip"
-        rm -rf "ig-build-zips/"
-        rm -rf "fhir/full-ig.zip"
-        rm -rf "fhir/*/full-ig.zip"
+        rm --recursive --force --verbose ${{ inputs.web-source }}/ig-build-zips/*.zip
+        rm --recursive --force --verbose ${{ inputs.web-source }}/*/full-ig.zip
+        rm --recursive --force --verbose ${{ inputs.web-source }}/*/*/full-ig.zip
 
     - name: Configure publication registry
       shell: bash
@@ -164,6 +160,12 @@ runs:
       shell: bash
       run: |
         echo "$(jq '.guides[-1]' ${{ inputs.registry-source }}/fhir-ig-list.json)"
+
+    - name: Show Web repo git status files
+      if: env.DEBUG == 'true'
+      shell: bash
+      run: |
+        git -C ${{ inputs.web-source }} status
 
     - name: commit web publication
       uses: actions-js/push@v1.5
