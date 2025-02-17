@@ -140,9 +140,14 @@ runs:
     - name: Remove large unnecessary files
       shell: bash
       run: |
-        rm -rf "${{ inputs.web-source }}/ig-build-zips/*.zip"
-        rm -rf "${{ inputs.web-source }}/*/full-ig.zip"
-        rm -rf "${{ inputs.web-source }}/*/*/full-ig.zip"
+
+        WEB_SOURCE="${${{ inputs.web-source }}%/}"  # Ensure no trailing slash
+        
+        rm -rf "${WEB_SOURCE}/ig-build-zips/*.zip"
+        rm -rf "${WEB_SOURCE}/full-ig.zip"
+        rm -rf "${WEB_SOURCE}/*/full-ig.zip"
+        rm -rf "fhir/*/full-ig.zip"
+        rm -rf "fhir/full-ig.zip"
 
     - name: Configure publication registry
       shell: bash
