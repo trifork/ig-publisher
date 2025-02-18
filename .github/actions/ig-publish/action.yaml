@@ -153,7 +153,7 @@ runs:
         echo "$(jq '
           .guides[-1].description = env.FUT_DESC |
           .guides[-1].authority = env.FUT_AUTHORITY |
-          .guides[-1].country = "${{ inputs.ig-country }}" |
+          .guides[-1].country = "${{ inputs.ig-country }}"
         ' ${{ inputs.registry-source }}/fhir-ig-list.json)" > ${{ inputs.registry-source }}/fhir-ig-list.json
 
     - name: Show new publication IG publication registration entry
