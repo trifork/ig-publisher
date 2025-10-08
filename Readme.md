@@ -1,4 +1,5 @@
-# Docker image for ig-publisher
+# Docker image for FHIR Implementation Guide Publisher
+-found at https://github.com/HL7/fhir-ig-publisher. Instructions on the actual publisher is found here: https://confluence.hl7.org/spaces/FHIR/pages/66938614/Implementation+Guide+Parameters
 
 Builds docker image for ig-publisher
 
