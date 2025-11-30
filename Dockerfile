@@ -1,4 +1,4 @@
-FROM openjdk:23-jdk-slim-bookworm
+FROM eclipse-temurin:25-jdk-jammy
 LABEL maintainer="Henning C. Nielsen"
 
 LABEL org.opencontainers.image.description="FHIR Implementation Guide Publisher"
@@ -18,12 +18,14 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # https://github.com/nodesource/distributions?tab=readme-ov-file#debian-versions
 # hadolint ignore=DL3008,DL3028,DL3016
-RUN sed -i 's/^Components: main$/& contrib/' /etc/apt/sources.list.d/debian.sources \
+RUN if [ -f /etc/apt/sources.list.d/debian.sources ]; then \
+       sed -i 's/^Components: main$/& contrib/' /etc/apt/sources.list.d/debian.sources; \
+     fi \
   && apt-get update \
+  && echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" | debconf-set-selections \
   && apt-get install --yes --no-install-recommends \
        build-essential \
        jq \
-       yq \
        git \
        curl \
        ruby \
@@ -32,7 +34,10 @@ RUN sed -i 's/^Components: main$/& contrib/' /etc/apt/sources.list.d/debian.sour
        # Fixes Spring Boot FontConfiguration exceptions - https://coderanch.com/t/761996/frameworks/Docker-Spring-boot-giving-sun
        ttf-mscorefonts-installer \
        fontconfig \
-  && fc-cache -f -v \
+  && arch="$(dpkg --print-architecture)" \
+   && curl -fsSL "https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${arch}" -o /usr/local/bin/yq \
+   && chmod +x /usr/local/bin/yq \
+   && fc-cache -f -v \
   && curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
   && apt-get install --yes --no-install-recommends nodejs \
   \
