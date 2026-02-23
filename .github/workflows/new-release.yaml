@@ -34,7 +34,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # 6.0.2
         with:
           fetch-depth: 0
-          # fetch-tags: true # Does not work for some reason, so we we use fetch-depth: 0
+          # fetch-tags: true # Does not work for some reason, so we use fetch-depth: 0
 
       # https://github.com/fut-infrastructure/ig-publisher/settings/variables/actions
       - name: Pipeline debug
