@@ -90,21 +90,21 @@ runs:
 
   steps:
     - name: web repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # 6.0.2
       with:
         repository: ${{ inputs.web-repo }}
         token: ${{ inputs.app-token }}
         path: ${{ inputs.web-source }}
 
     - name: registry repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # 6.0.2
       with:
         repository: ${{ inputs.registry-repo }}
         token: ${{ inputs.app-token }}
         path: ${{ inputs.registry-source }}
 
     - name: history repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # 6.0.2
       with:
         repository: ${{ inputs.history-repo }}
         token: ${{ inputs.app-token }}
@@ -168,7 +168,7 @@ runs:
         git -C ${{ inputs.web-source }} status
 
     - name: commit web publication
-      uses: actions-js/push@v1.5
+      uses: actions-js/push@5a7cbd780d82c0c937b5977586e641b2fd94acc5 # 1.5
       if: ${{ inputs.web-commit == 'true' }}
       with:
         github_token: ${{ inputs.app-token }}
@@ -178,7 +178,7 @@ runs:
         directory: ${{ inputs.web-source }}
 
     - name: commit publication to registry
-      uses: actions-js/push@v1.5
+      uses: actions-js/push@5a7cbd780d82c0c937b5977586e641b2fd94acc5 # 1.5
       if: ${{ inputs.registry-commit == 'true' }}
       with:
         github_token: ${{ inputs.app-token }}

@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # https://github.com/actions/checkout/?tab=readme-ov-file#usage
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # 6.0.2
         with:
           fetch-depth: 0
           # fetch-tags: true # Does not work for some reason, so we we use fetch-depth: 0
@@ -90,19 +90,19 @@ jobs:
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
         if: env.NEW_BUILD == 'true'
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # 3.7.0
 
       # https://github.com/docker/setup-buildx-action
       - name: Set up Docker Buildx
         if: env.NEW_BUILD == 'true'
         id: buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # 3.12.0
         with:
           install: true
 
       - name: Login to GHCR
         if: env.NEW_BUILD == 'true'
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # 3.7.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.repository_owner }}
@@ -111,7 +111,7 @@ jobs:
       - name: Docker meta
         if: env.NEW_BUILD == 'true'
         id: meta # you'll use this in the next step
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # 3.10.0
         with:
           # list of Docker images to use as base name for tags
           images: ${{ env.REGISTRY }}/${{ steps.fut.outputs.image_output }}
@@ -130,7 +130,7 @@ jobs:
       - name: Build and push
         if: env.NEW_BUILD == 'true'
         id: docker_build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # 6.19.2
         with:
           context: .
           platforms: linux/amd64 #,linux/arm64
