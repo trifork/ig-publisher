@@ -54,8 +54,8 @@ jobs:
           echo "Environment variables:"
           env
 
-      - name: Get the latest upstream release
-        id: upstream
+      - name: Get the latest upstream release of FHIR-IG Publisher
+        id: ig-publisher-upstream
         run: |
           # https://docs.github.com/en/rest/releases/releases?#get-the-latest-release
           upstream_version=$(curl -s https://api.github.com/repos/HL7/fhir-ig-publisher/releases/latest | jq -r '.tag_name')
@@ -63,28 +63,56 @@ jobs:
           echo "upstream_version=$upstream_version" >> $GITHUB_OUTPUT
           echo "Found upstream release: \"$upstream_version\""
 
-      - name: Get the latest FUT release
-        id: fut
+      - name: Get the latest IG Publisher release tag
+        id: ig-publisher-tag
         env:
           name: ${{ env.IMAGE_NAME }}
         run: |
           # https://git-scm.com/docs/git-tag#Documentation/git-tag.txt---sortltkeygt
           # https://remarkablemark.org/blog/2023/04/15/how-to-grep-for-semver/
-          fut_version=$(git tag \
+          ig_version=$(git tag \
             | sort --version-sort \
             | grep -Eo '[0-9]{1,}.[0-9]{1,}.[0-9]{1,}' \
             | tail -1 \
             | sed 's/\\n//g') # Remove any newlines.
           echo "image_output=${name,,}" >> $GITHUB_OUTPUT
-          echo "Latest SemVer tag: $fut_version"
-          echo "fut_version=$fut_version" >> $GITHUB_OUTPUT
-          echo "Found FUT release: \"$fut_version\""
+          echo "Latest SemVer tag: $ig_version"
+          echo "ig_version=$ig_version" >> $GITHUB_OUTPUT
+          echo "Found IG Publisher release: \"$ig_version\""
+
+      - name: Get the latest upstream release of FSH-SUSHI
+        id: fsh-sushi-upstream
+        run: |
+          # https://docs.github.com/en/rest/releases/releases?#get-the-latest-release
+          upstream_version=$(curl -s https://api.github.com/repos/FHIR/sushi/releases/latest | jq -r '.tag_name')
+          # https://docs.github.com/en/actions/using-jobs/defining-outputs-for-jobs
+          echo "upstream_version=$upstream_version" >> $GITHUB_OUTPUT
+          echo "Found upstream release: \"$upstream_version\""
+
+      - name: Get the latest FSH SUSHI release
+        id: fsh-sushi-tag
+        env:
+          name: ${{ env.IMAGE_NAME }}
+        run: |
+          # https://git-scm.com/docs/git-tag#Documentation/git-tag.txt---sortltkeygt
+          # https://remarkablemark.org/blog/2023/04/15/how-to-grep-for-semver/
+          fsh_sushi_version=$(git tag \
+            | sort --version-sort \
+            | grep -Eo '[0-9]{1,}.[0-9]{1,}.[0-9]{1,}' \
+            | tail -1 \
+            | sed 's/\\n//g') # Remove any newlines.
+          echo "image_output=${name,,}" >> $GITHUB_OUTPUT
+          echo "Latest SemVer tag: $fsh_sushi_version"
+          echo "fsh_sushi_version=$fsh_sushi_version" >> $GITHUB_OUTPUT
+          echo "Found FSH SUSHI release: \"$fsh_sushi_version\""
 
       - name: Determine if new build is needed
-        if: steps.upstream.outputs.upstream_version != steps.fut.outputs.fut_version
+        if: steps.ig-publisher-upstream.outputs.upstream_version != steps.ig-publisher-tag.outputs.ig_version &&
+            steps.fsh-sushi-upstream.outputs.upstream_version != steps.fsh-sushi-tag.outputs.fsh_sushi_version
         run: |
-          echo "Upstream output: ${{ steps.upstream.outputs.upstream_version }}"
-          echo "FUT output: ${{ steps.fut.outputs.fut_version }}"
+          echo "Upstream output: ${{ steps.ig-publisher-upstream.outputs.upstream_version }}"
+          echo "IG Publisher output: ${{ steps.ig-publisher-tag.outputs.ig_version }}"
+          echo "FSH SUSHI output: ${{ steps.fsh-sushi-tag.outputs.fsh_sushi_version }}"
           echo "NEW_BUILD=true" >> $GITHUB_ENV
 
       # https://github.com/docker/setup-qemu-action
@@ -97,8 +125,6 @@ jobs:
         if: env.NEW_BUILD == 'true'
         id: buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
-        with:
-          install: true
 
       - name: Login to GHCR
         if: env.NEW_BUILD == 'true'
@@ -114,7 +140,7 @@ jobs:
         uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
         with:
           # list of Docker images to use as base name for tags
-          images: ${{ env.REGISTRY }}/${{ steps.fut.outputs.image_output }}
+          images: ${{ env.REGISTRY }}/${{ steps.ig-publisher-tag.outputs.image_output }}
           # Docker tags based on the following events/attributes
           tags: |
             type=schedule
@@ -125,16 +151,18 @@ jobs:
             type=semver,pattern={{major}}
             type=sha
             type=raw,latest
-            type=semver,pattern={{version}},value=${{ steps.upstream.outputs.upstream_version }}
+            type=semver,pattern={{version}},value=${{ steps.ig-publisher-upstream.outputs.upstream_version }}
 
       - name: Build and push
         if: env.NEW_BUILD == 'true'
         id: docker_build
+        env:
+          BUILDX_BUILDER: ${{ steps.buildx.outputs.name }}
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
           platforms: linux/amd64 #,linux/arm64
-          build-args: IG_PUB_VERSION=${{ steps.upstream.outputs.upstream_version }}
+          build-args: IG_PUB_VERSION=${{ steps.ig-publisher-upstream.outputs.upstream_version }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -146,7 +174,7 @@ jobs:
       # would then prevent the tag from being created.
       # and the failed build would be retried at each schedule.
       - name: Create tag for the new upstream release
-        if: steps.upstream.outputs.upstream_version != steps.fut.outputs.fut_version
+        if: env.NEW_BUILD == 'true'
         run: |
-          git tag ${{ steps.upstream.outputs.upstream_version }}
-          git push origin ${{ steps.upstream.outputs.upstream_version }}
+          git tag -f ${{ steps.ig-publisher-upstream.outputs.upstream_version }}
+          git push origin -f ${{ steps.ig-publisher-upstream.outputs.upstream_version }}
