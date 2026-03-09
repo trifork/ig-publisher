@@ -111,7 +111,7 @@ runs:
         path: ${{ inputs.history-source }}
 
     - name: Run the IG publisher
-      uses: trifork/ig-publisher/.github/actions/ig-transpile@v1
+      uses: trifork/ig-publisher/.github/actions/ig-transpile@cd2aa8a11ec63d7a95231c9a552152221b5af242 # v2.1.2
       with:
         ig-source: ${{ inputs.ig-source }}
         command: ${{ inputs.command }}
