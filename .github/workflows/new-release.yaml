@@ -57,8 +57,13 @@ jobs:
       - name: Get the latest upstream release of FHIR-IG Publisher
         id: ig-publisher-upstream
         run: |
-          # https://docs.github.com/en/rest/releases/releases?#get-the-latest-release
-          upstream_version=$(curl -s https://api.github.com/repos/HL7/fhir-ig-publisher/releases/latest | jq -r '.tag_name')
+          # https://docs.github.com/en/rest/releases/releases?#list-releases
+          # "/releases/latest" returns the most recent release across all major
+          # versions, which could be a 2.x patch. The image and the ig-publish
+          # action require 3.x (absolute paths for -go-publish), so we list
+          # releases and pick the highest 3.x tag.
+          upstream_version=$(curl -s "https://api.github.com/repos/HL7/fhir-ig-publisher/releases?per_page=100" \
+            | jq -r '[.[] | select(.tag_name | startswith("3."))] | sort_by(.tag_name | split(".") | map(tonumber)) | last | .tag_name')
           # https://docs.github.com/en/actions/using-jobs/defining-outputs-for-jobs
           echo "upstream_version=$upstream_version" >> $GITHUB_OUTPUT
           echo "Found upstream release: \"$upstream_version\""
