@@ -126,15 +126,16 @@ runs:
 
     # https://confluence.hl7.org/display/FHIR/HL7+Process+for+Publishing+a+FHIR+IG
     # https://confluence.hl7.org/pages/viewpage.action?pageId=81027536#MaintainingaFHIRIGPublication-CanonicalURLs
+    # IG Publisher 3.x requires absolute paths for -go-publish parameters.
     - name: Run the IG Publish process
       shell: bash
       run: >-
         ${{ inputs.command }} -go-publish
-        -source ${{ inputs.ig-source }}
-        -web ${{ inputs.web-source }}
-        -registry ${{ inputs.registry-source }}/fhir-ig-list.json 
-        -history ${{ inputs.history-source }}
-        -templates ${{ inputs.web-template-source }}
+        -source "$(realpath -m '${{ inputs.ig-source }}')"
+        -web "$(realpath -m '${{ inputs.web-source }}')"
+        -registry "$(realpath -m '${{ inputs.registry-source }}/fhir-ig-list.json')"
+        -history "$(realpath -m '${{ inputs.history-source }}')"
+        -templates "$(realpath -m '${{ inputs.web-template-source }}')"
 
     - name: Remove large unnecessary files
       shell: bash
