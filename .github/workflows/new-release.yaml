@@ -16,10 +16,8 @@ on:
     # https://crontab.guru/#0_7_*_*_1-5
     - cron: "0 7 * * 1-5"
 
-# permissions are needed if pushing to ghcr.io
-permissions:
-  packages: write
-  contents: write
+# Least privilege: no token permissions by default, each job asks for its own.
+permissions: {}
 
 # Serialise runs so a schedule and a manual dispatch can't race on the same tag.
 concurrency:
@@ -34,6 +32,8 @@ env:
 jobs:
   detect:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # checkout and read tags
     outputs:
       versions: ${{ steps.missing.outputs.versions }}
       highest: ${{ steps.upstream.outputs.highest }}
@@ -102,6 +102,9 @@ jobs:
     needs: detect
     if: needs.detect.outputs.versions != '[]'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # push the release tag
+      packages: write # push the image to ghcr.io
     strategy:
       fail-fast: false
       matrix:
