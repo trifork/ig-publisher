@@ -12,6 +12,7 @@ ARG gid=1000
 ARG HOME=/github/home
 
 ARG IG_PUB_VERSION # Is set by the pipeline
+ARG SUSHI_VERSION=latest
 
 # https://github.com/codacy/codacy-hadolint/blob/master/docs/description/DL4006.md
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -45,7 +46,7 @@ RUN if [ -f /etc/apt/sources.list.d/debian.sources ]; then \
        bundler \
        jekyll \
   \
-  && npm install -g fsh-sushi \
+  && npm install -g fsh-sushi${SUSHI_VERSION:+@$SUSHI_VERSION} \
   \
   && mkdir input-cache \
   && curl -fsSL https://github.com/HL7/fhir-ig-publisher/releases/download/${IG_PUB_VERSION}/publisher.jar -o input-cache/publisher.jar \

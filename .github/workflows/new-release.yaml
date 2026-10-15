@@ -37,6 +37,7 @@ jobs:
     outputs:
       versions: ${{ steps.missing.outputs.versions }}
       highest: ${{ steps.upstream.outputs.highest }}
+      sushi_version: ${{ steps.sushi.outputs.sushi_version }}
     steps:
       # https://github.com/actions/checkout/?tab=readme-ov-file#usage
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -80,18 +81,50 @@ jobs:
           # https://docs.github.com/en/actions/using-jobs/defining-outputs-for-jobs
           echo "highest=$(tail -1 upstream.txt)" >> $GITHUB_OUTPUT
 
+      - name: Get the latest FSH SUSHI version
+        id: sushi
+        run: |
+          # https://docs.github.com/en/rest/releases/releases?#get-the-latest-release
+          sushi_tag=$(curl -fsS https://api.github.com/repos/FHIR/sushi/releases/latest | jq -r '.tag_name')
+          # Strip leading 'v' for npm
+          sushi_version="${sushi_tag#v}"
+          echo "SUSHI upstream: $sushi_version (from tag $sushi_tag)"
+          echo "sushi_version=$sushi_version" >> $GITHUB_OUTPUT
+
       # Whether the tag exists decides the build, so every upstream release gets
       # built once, including patches to older majors.
+      # A SUSHI version bump also triggers a rebuild of the highest version so
+      # the floating latest/nightly/sha tags pick up the new SUSHI.
       - name: Find upstream releases that are not built yet
         id: missing
         env:
           highest: ${{ steps.upstream.outputs.highest }}
+          sushi_version: ${{ steps.sushi.outputs.sushi_version }}
         run: |
           versions=$(while read -r v; do
               git rev-parse -q --verify "refs/tags/$v" > /dev/null || echo "$v"
             done < upstream.txt)
+
+          # Check if the current latest image has an outdated SUSHI.
+          # Pull the label annotation set by docker/metadata-action, which
+          # records the SUSHI version used at build time.
+          needs_rebuild_for_sushi=false
+          image="ghcr.io/${GITHUB_REPOSITORY,,}:latest"
+          if docker pull "$image" 2>/dev/null; then
+            current_sushi=$(docker inspect "$image" \
+              --format '{{ index .Config.Labels "org.opencontainers.image.version.sushi" }}' 2>/dev/null || true)
+            echo "SUSHI in current latest image: ${current_sushi:-unknown}"
+            if [ -n "$current_sushi" ] && [ "$current_sushi" != "$sushi_version" ]; then
+              echo "SUSHI is outdated ($current_sushi -> $sushi_version), rebuilding highest"
+              needs_rebuild_for_sushi=true
+            fi
+          else
+            echo "Could not pull $image, will rebuild for SUSHI"
+            needs_rebuild_for_sushi=true
+          fi
+
           # A forced build also rebuilds the highest version, even if it is tagged.
-          if [ "$FORCE_BUILD" = true ]; then
+          if [ "$FORCE_BUILD" = true ] || [ "$needs_rebuild_for_sushi" = true ]; then
             versions=$(printf '%s\n' $versions "$highest" | sort -uV)
           fi
           json=$(printf '%s\n' $versions | jq -Rnc '[inputs | select(length > 0)]')
@@ -153,6 +186,10 @@ jobs:
             type=schedule,enable=${{ env.IS_HIGHEST }}
             type=ref,event=branch,enable=${{ env.IS_HIGHEST }}
             type=sha,enable=${{ env.IS_HIGHEST }}
+          # Record the SUSHI version in a label so future runs can detect
+          # when the image needs rebuilding for a new SUSHI release.
+          labels: |
+            org.opencontainers.image.version.sushi=${{ needs.detect.outputs.sushi_version }}
 
       - name: Build and push
         id: docker_build
@@ -162,7 +199,9 @@ jobs:
         with:
           context: .
           platforms: linux/amd64 #,linux/arm64
-          build-args: IG_PUB_VERSION=${{ matrix.version }}
+          build-args: |
+            IG_PUB_VERSION=${{ matrix.version }}
+            SUSHI_VERSION=${{ needs.detect.outputs.sushi_version }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
