@@ -226,19 +226,81 @@ jobs:
             git push origin "$version"
           fi
 
-      # Create a GitHub Release with auto-generated release notes so
-      # downstream dependabot PRs (and humans) can see what changed.
-      # The notes are generated from PRs/commits since the previous tag
-      # using .github/release.yml categorization. They can be edited
-      # afterwards on the release page for human context.
-      - name: Create GitHub Release
+      # Create a *draft* GitHub Release with auto-generated release notes.
+      # Drafts are invisible to the public and don't trigger dependabot
+      # notifications. A maintainer reviews the notes, adds any human
+      # context, then publishes the release from the GitHub UI.
+      # See .github/release.yml for the categorization config.
+      - name: Create draft GitHub Release
+        id: draft
         if: github.event_name != 'pull_request'
         env:
           version: ${{ matrix.version }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if ! gh release view "$version" >/dev/null 2>&1; then
+          if gh release view "$version" >/dev/null 2>&1; then
+            echo "Release $version already exists, skipping"
+            echo "created=false" >> $GITHUB_OUTPUT
+          else
             gh release create "$version" \
+              --draft \
               --generate-notes \
               --title "$version"
+            echo "created=true" >> $GITHUB_OUTPUT
           fi
+
+  # After all builds finish, create a single tracking issue for any
+  # draft releases that were created in this run. The issue pings
+  # maintainers to review the draft notes and publish. It closes
+  # automatically when the release is published (via "on: release"
+  # workflow or a linked release issue closer).
+  notify:
+    needs: build
+    if: always() && needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Find drafts created in this run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Collect all draft releases
+          DRAFTS=$(gh release list --json name,isDraft,isLatest --jq '[.[] | select(.isDraft == true) | .name]')
+          echo "Draft releases: $DRAFTS"
+
+          if [ "$(echo "$DRAFTS" | jq 'length')" -eq 0 ]; then
+            echo "No draft releases found, skipping"
+            exit 0
+          fi
+
+          # Check if there's already an open issue tracking draft releases
+          EXISTING=$(gh issue list \
+            --state open \
+            --search "Draft release awaiting review in:title" \
+            --json number,title --jq '.[].number')
+
+          if [ -n "$EXISTING" ]; then
+            echo "Tracking issue #$EXISTING already open, adding a comment"
+            BODY=$(echo "$DRAFTS" | jq -r '.[] | "- [\(.name)](https://github.com/${GITHUB_REPOSITORY}/releases/tag/\(.name))"')
+            gh issue comment "$EXISTING" --body "Drafts still awaiting review:
+
+          $BODY"
+            exit 0
+          fi
+
+          # Create a new tracking issue
+          BODY=$(echo "$DRAFTS" | jq -r '.[] | "- [\(.name)](https://github.com/${GITHUB_REPOSITORY}/releases/tag/\(.name))"')
+          gh issue create \
+            --title "Draft release awaiting review" \
+            --body "The pipeline created one or more draft releases that need review before publishing.
+
+          ## Draft releases
+          $BODY
+
+          ## Steps
+          1. Review each draft release on the [releases page](https://github.com/${GITHUB_REPOSITORY}/releases)
+          2. Edit the auto-generated notes to add context if needed
+          3. Publish each release
+          4. Close this issue"
