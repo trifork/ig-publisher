@@ -225,3 +225,20 @@ jobs:
             git tag "$version"
             git push origin "$version"
           fi
+
+      # Create a GitHub Release with auto-generated release notes so
+      # downstream dependabot PRs (and humans) can see what changed.
+      # The notes are generated from PRs/commits since the previous tag
+      # using .github/release.yml categorization. They can be edited
+      # afterwards on the release page for human context.
+      - name: Create GitHub Release
+        if: github.event_name != 'pull_request'
+        env:
+          version: ${{ matrix.version }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! gh release view "$version" >/dev/null 2>&1; then
+            gh release create "$version" \
+              --generate-notes \
+              --title "$version"
+          fi
