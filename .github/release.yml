@@ -1,0 +1,31 @@
+# Configuration for GitHub's auto-generated release notes.
+# https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes#configuring-automatically-generated-release-notes
+#
+# PRs are grouped by label. Dependabot PRs get the "dependencies" label
+# automatically, so they land in their own section. PRs with no matching
+# label fall through to "Other Changes".
+
+changelog:
+  exclude:
+    labels:
+      - duplicate
+      - invalid
+      - question
+      - wontfix
+  categories:
+    - title: 🚀 Features & enhancements
+      labels:
+        - enhancement
+    - title: 🐛 Bug fixes
+      labels:
+        - bug
+    - title: 📚 Documentation
+      labels:
+        - documentation
+    - title: 📦 Dependencies
+      labels:
+        - dependencies
+        - github_actions
+    - title: Other changes
+      labels:
+        - "*"
