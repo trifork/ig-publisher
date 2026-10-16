@@ -1,0 +1,41 @@
+# Auto-close the "Draft release awaiting review" tracking issue when
+# a release is published (i.e. converted from draft to published).
+
+name: Close draft tracking issue on publish
+
+on:
+  release:
+    types: [published]
+
+permissions: {}
+
+jobs:
+  close:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Close tracking issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Find the open tracking issue
+          ISSUE=$(gh issue list \
+            --state open \
+            --search "Draft release awaiting review in:title" \
+            --json number,title --jq '.[].number')
+
+          if [ -z "$ISSUE" ]; then
+            echo "No tracking issue found, nothing to close"
+            exit 0
+          fi
+
+          # Check if there are any remaining draft releases
+          DRAFTS=$(gh release list --json name,isDraft --jq '[.[] | select(.isDraft == true)] | length')
+
+          if [ "$DRAFTS" -eq 0 ]; then
+            echo "No more drafts, closing issue #$ISSUE"
+            gh issue close "$ISSUE" --comment "All draft releases have been published. Closing."
+          else
+            echo "There are still $DRAFTS draft release(s), leaving issue #$ISSUE open"
+          fi
