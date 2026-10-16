@@ -85,6 +85,16 @@ inputs:
     required: false
     default: "java -jar /input-cache/publisher.jar"
 
+  run-sushi-pre-check:
+    description: |
+      Whether to run a full IG build (sushi + publisher) as a pre-check before
+      the -go-publish step. This runs sushi and the full build first, and if
+      it fails the job stops before the slower -go-publish step.
+      The -go-publish step also runs sushi and the full build internally, so
+      this is redundant by default but serves as a fail-fast gate.
+    required: false
+    default: "true"
+
 runs:
   using: composite
 
@@ -111,6 +121,7 @@ runs:
         path: ${{ inputs.history-source }}
 
     - name: Run the IG publisher
+      if: ${{ inputs.run-sushi-pre-check == 'true' }}
       uses: trifork/ig-publisher/.github/actions/ig-transpile@cd2aa8a11ec63d7a95231c9a552152221b5af242 # v2.1.2
       with:
         ig-source: ${{ inputs.ig-source }}
